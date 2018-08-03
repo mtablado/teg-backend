@@ -1,0 +1,21 @@
+
+# MONGODB (MongoProperties)
+spring:
+  data:
+    mongodb:
+      authentication-database: admin # Authentication database name.
+      #database: transport-tracker # Database name.
+      #field-naming-strategy: # Fully qualified name of the FieldNamingStrategy to use.
+      #grid-fs-database: # GridFS database name.
+      #host: localhost # Mongo server host. Cannot be set with URI.
+      #port: 27017 # Mongo server port. Cannot be set with URI.
+      repositories:
+        type: auto # Type of Mongo repositories to enable.
+      uri: mongodb://root:example@localhost:27017/transport-tracker # Mongo database URI. Cannot be set with host, port and credentials.
+      #username: root # Login user of the mongo server. Cannot be set with URI.
+      #password: example # Login password of the mongo server. Cannot be set with URI.
+
+logging:
+  level:
+    org.springframework: INFO
+    org.springframework.web: DEBUG
