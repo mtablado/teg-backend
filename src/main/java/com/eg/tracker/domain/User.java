@@ -20,7 +20,7 @@ public class User implements UserDetails {
 	private String username;
 	private String password;
 	private String name;
-	private String lastName;
+	private String lastname;
 	protected UserType type;
 	private Collection<? extends GrantedAuthority> authorities;
 	private boolean enabled = true;

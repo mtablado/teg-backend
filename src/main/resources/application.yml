@@ -17,5 +17,50 @@ spring:
 
 logging:
   level:
+    root: INFO
+  
+eg:
+  x-message-ttl: 10000 
+---
+spring:
+  profiles: minikube
+  rabbitmq:
+    host: 192.168.99.100
+    port: 30801
+
+---
+spring:
+  profiles: gcloud-prod
+  data:
+    mongodb:
+      authentication-database: admin # Authentication database name.
+      repositories:
+        type: auto # Type of Mongo repositories to enable.
+      uri: mongodb://admin:la-madre-que-nos-pario-1234@35.246.248.28:28081/transport-tracker # Mongo database URI. Cannot be set with host, port and credentials.
+  rabbitmq:
+    host: 35.198.98.50
+    port: 30801
+---
+spring:
+  profiles: local
+
+logging:
+  level:
     org.springframework: INFO
     org.springframework.web: DEBUG
+
+---
+spring:
+  profiles: prod
+
+  rabbitmq:
+    host: 35.198.98.50
+    port: 30801
+
+eg:
+  x-message-ttl: 180000 
+---
+spring:
+  profiles: mock-traffic
+
+    
