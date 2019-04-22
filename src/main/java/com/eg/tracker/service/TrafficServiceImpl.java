@@ -72,34 +72,41 @@ public class TrafficServiceImpl implements TrafficService {
 	@Scheduled(cron = "0 0/5 7-22 * * *")
 	public void processDriversStatus() {
 
-		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime movementBoundary = now.minusMinutes(10);
-		LocalDateTime offBoundary = now.minusHours(4);
-
 		Flux<Driver> drivers = this.driverService.findRxDrivers();
 		drivers.subscribe(driver -> {
 			if (null != driver.getLastPosition()) {
 
 				Date date = driver.getLastPosition().getTime();
-				LocalDateTime lastMove = date.toInstant()
-						.atZone(ZoneId.systemDefault())
-						.toLocalDateTime();
+				DriverStatusType status = this.getDriverStatusFromDate(date);
+				driver.setStatus(status);
 
-				if (lastMove.isAfter(movementBoundary)) {
-					// last 15 minutes, moving.
-					driver.setStatus(DriverStatusType.MOVING);
-				} else if (lastMove.isBefore(offBoundary)) {
-					// no news since 4 ours, off
-					driver.setStatus(DriverStatusType.OFF);
-				} else {
-					// between off and 15 minutes, stationary
-					driver.setStatus(DriverStatusType.STATIONARY);
-				}
 			} else {
 				driver.setStatus(DriverStatusType.UNKOWN);
 			}
 			this.driverService.saveDriver(driver);
 		});
+	}
+
+	public DriverStatusType getDriverStatusFromDate(Date date) {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime movementBoundary = now.minusMinutes(10);
+		LocalDateTime offBoundary = now.minusHours(4);
+
+		LocalDateTime lastMove = date.toInstant()
+				.atZone(ZoneId.systemDefault())
+				.toLocalDateTime();
+
+		if (lastMove.isAfter(movementBoundary)) {
+			// last 15 minutes, moving.
+			return DriverStatusType.MOVING;
+		} else if (lastMove.isBefore(offBoundary)) {
+			// no news since 4 ours, off
+			return DriverStatusType.OFF;
+		} else {
+			// between off and 15 minutes, stationary
+			return DriverStatusType.STATIONARY;
+		}
+
 	}
 
 }

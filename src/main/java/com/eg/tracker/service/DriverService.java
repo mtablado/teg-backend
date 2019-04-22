@@ -24,4 +24,5 @@ public interface DriverService {
 	Driver saveDriver(Driver driver);
 
 	Driver setLastPosition(Driver driver, Position position);
+
 }
