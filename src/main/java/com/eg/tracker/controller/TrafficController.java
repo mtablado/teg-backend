@@ -49,7 +49,7 @@ public class TrafficController {
 
 		return this.service.getTraffic()
 			.take(50)
-			.take(Duration.ofMillis(500))
+			.take(Duration.ofMillis(2000))
 			.collectList();
 
 	}

@@ -1,15 +1,20 @@
 package com.eg.tracker.service;
 
-import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 import org.springframework.amqp.core.MessageListener;
 import org.springframework.amqp.rabbit.listener.MessageListenerContainer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.oauth2.common.util.SerializationUtils;
 import org.springframework.stereotype.Service;
 
 import com.eg.tracker.domain.Driver;
 import com.eg.tracker.domain.DriverPosition;
+import com.eg.tracker.domain.DriverStatusType;
 import com.eg.tracker.domain.UserType;
 import com.eg.tracker.repository.ReactiveDriverRepository;
 
@@ -20,22 +25,17 @@ import reactor.core.publisher.Flux;
 @Service
 public class TrafficServiceImpl implements TrafficService {
 
-	private Flux<Driver> drivers;
-
 	@Autowired
 	private ReactiveDriverRepository driverRepository;
 
 	@Autowired
+	private DriverService driverService;
+
+
+	@Autowired
+	@Qualifier("trafficMapContainer")
 	private MessageListenerContainer mlc;
 
-	public Flux<Driver> _getTraffic() {
-		Flux<Driver> drivers = this.driverRepository.findAllByType(UserType.DRIVER);
-		Flux<Driver> interval = Flux.interval(Duration.ofSeconds(1))
-				.zipWith(drivers, (i, item) -> item);
-
-		return interval;
-
-	}
 
 	@Override
 	public Flux<DriverPosition> getTraffic() {
@@ -44,12 +44,16 @@ public class TrafficServiceImpl implements TrafficService {
 
 		// Get the last stored positions
 		Flux<DriverPosition> initial = this.driverRepository.findAllByType(UserType.DRIVER)
-			.map(d -> new DriverPosition(d));
+			.map(d -> {
+				log.debug("Traffic from initial flux:" + d);
+				return new DriverPosition(d);
+			});
 
 		// Register to new movements.
 		Flux<DriverPosition> drivers = Flux.create(emitter -> {
 			this.mlc.setupMessageListener((MessageListener) m -> {
 				DriverPosition d = (DriverPosition) SerializationUtils.deserialize(m.getBody());
+				log.debug("Traffic from queue flux:" + d);
 				emitter.next(d);
 			});
 	        emitter.onRequest(v -> {
@@ -64,20 +68,37 @@ public class TrafficServiceImpl implements TrafficService {
 		return Flux.concat(initial, drivers);
 	}
 
-	public Flux<Driver> __getTraffic() {
-		return Flux.create(fluxSink -> {
-			while (!fluxSink.isCancelled()) {
-				this.driverRepository.findAllByType(UserType.DRIVER).subscribe(driver -> {
-						fluxSink.next(driver);
-					});
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
+	@Override
+	@Scheduled(cron = "0 0/5 7-22 * * *")
+	public void processDriversStatus() {
 
-			log.info("Traffic flux cancelled by client");
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime movementBoundary = now.minusMinutes(10);
+		LocalDateTime offBoundary = now.minusHours(4);
+
+		Flux<Driver> drivers = this.driverService.findRxDrivers();
+		drivers.subscribe(driver -> {
+			if (null != driver.getLastPosition()) {
+
+				Date date = driver.getLastPosition().getTime();
+				LocalDateTime lastMove = date.toInstant()
+						.atZone(ZoneId.systemDefault())
+						.toLocalDateTime();
+
+				if (lastMove.isAfter(movementBoundary)) {
+					// last 15 minutes, moving.
+					driver.setStatus(DriverStatusType.MOVING);
+				} else if (lastMove.isBefore(offBoundary)) {
+					// no news since 4 ours, off
+					driver.setStatus(DriverStatusType.OFF);
+				} else {
+					// between off and 15 minutes, stationary
+					driver.setStatus(DriverStatusType.STATIONARY);
+				}
+			} else {
+				driver.setStatus(DriverStatusType.UNKOWN);
+			}
+			this.driverService.saveDriver(driver);
 		});
 	}
 

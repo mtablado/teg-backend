@@ -6,8 +6,8 @@ import java.util.List;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.utils.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.eg.tracker.conf.AMQPConfig;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @Profile("mock-traffic")
-public class RabbitRunnerTest implements CommandLineRunner {
+public class MockTrafficGenerator {
 
 	@Autowired
     RabbitTemplate rabbitTemplate;
@@ -30,9 +30,9 @@ public class RabbitRunnerTest implements CommandLineRunner {
     @Autowired
     private DriverService driverService;
 
-    @Override
-    public void run(String... args) throws Exception {
-
+    @Scheduled(cron = "0 0/1 7-20 * * *")
+    public void mockTraffic() throws Exception {
+    	log.info("Generating mock traffic");
     	int count = 100;
 
     	List<Driver> drivers = this.driverService.findDrivers();
@@ -59,7 +59,9 @@ public class RabbitRunnerTest implements CommandLineRunner {
 
     		byte[] obj = SerializationUtils.serialize(dp);
     		this.rabbitTemplate.convertAndSend(AMQPConfig.topicExchangeName, "teg.traffic", obj);
-    		Thread.sleep(2000);
+
+    		//this.driverService.setLastPosition(driver, p);
+    		Thread.sleep(500);
     	}
     }
 

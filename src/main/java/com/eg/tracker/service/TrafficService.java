@@ -6,4 +6,6 @@ import reactor.core.publisher.Flux;
 
 public interface TrafficService {
 	Flux<DriverPosition> getTraffic();
+
+	void processDriversStatus();
 }

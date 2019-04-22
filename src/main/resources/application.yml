@@ -31,15 +31,12 @@ spring:
 ---
 spring:
   profiles: gcloud-prod
-  data:
-    mongodb:
-      authentication-database: admin # Authentication database name.
-      repositories:
-        type: auto # Type of Mongo repositories to enable.
-      uri: mongodb://admin:la-madre-que-nos-pario-1234@35.246.248.28:28081/transport-tracker # Mongo database URI. Cannot be set with host, port and credentials.
   rabbitmq:
-    host: 35.198.98.50
+    host: 35.246.236.190
     port: 30801
+    
+eg:
+  x-message-ttl: 6000000 
 ---
 spring:
   profiles: local

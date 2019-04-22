@@ -18,6 +18,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.MessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,8 +32,10 @@ public class AMQPConfig {
 	public static final String topicExchangeName = "teg-traffic";
 
     static final String queueName = "/amq/queue/teg-traffic-queue";
+    static final String trafficDataQueueName = "/amq/queue/teg-traffic-data-queue";
 
     static final String routingKey = "teg.#";
+    static final String trafficRoutingKey = "teg.traffic.#";
     static final String trafficPositionKey = "teg.traffic.position";
 
     /**
@@ -50,6 +53,14 @@ public class AMQPConfig {
     	// Messages time-to-live
     	args.put("x-message-ttl", this.messageTtl);
         return new Queue(queueName, false, false, false, args);
+    }
+
+    @Bean
+    Queue trafficDataQueue() {
+    	Map<String, Object> args = new HashMap<>();
+    	// Messages time-to-live
+    	args.put("x-message-ttl", this.messageTtl);
+        return new Queue(trafficDataQueueName, true, false, false, args);
     }
 
 	public static String trafficPositionKey() {
@@ -75,11 +86,31 @@ public class AMQPConfig {
     }
 
     @Bean
-    MessageListenerContainer container(ConnectionFactory connectionFactory) {
+    public Binding trafficDataBinding(TopicExchange exchange) {
+        return BindingBuilder
+    		.bind(this.trafficDataQueue())
+    		.to(exchange)
+    		.with(trafficRoutingKey);
+    }
+
+    @Bean
+    @Qualifier("trafficMapContainer")
+    MessageListenerContainer trafficMapContainer(ConnectionFactory connectionFactory) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.setQueueNames(queueName);
         container.setMessageListener(this.logListener());
+        return container;
+    }
+
+    @Bean
+    MessageListenerContainer trafficDataContainer(
+    		ConnectionFactory connectionFactory
+    		, @Qualifier("trafficQueueProcessor") MessageListener listener) {
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.setQueueNames(trafficDataQueueName);
+        container.setMessageListener(listener);
         return container;
     }
 

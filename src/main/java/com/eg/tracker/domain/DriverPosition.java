@@ -22,6 +22,7 @@ public class DriverPosition implements Serializable {
 			this.longitude = p.getLongitude();
 			this.time = p.getTime();
 		}
+		this.status = driver.getStatus();
 	}
 
 	private String id;
@@ -30,5 +31,6 @@ public class DriverPosition implements Serializable {
 	private String latitude;
 	private String longitude;
 	private Date time;
+	private DriverStatusType status;
 
 }
