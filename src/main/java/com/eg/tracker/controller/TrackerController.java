@@ -29,14 +29,31 @@ public class TrackerController {
 	@Autowired
     private RabbitTemplate rabbitTemplate;
 
+	@Deprecated
 	@ResponseStatus(value = HttpStatus.OK)
 	@PostMapping
 	@RequestMapping(value="/position", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public void trackPosition(@RequestBody Position position) throws Exception {
 		User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		Driver driver = this.service.getDriver(currentUser.getId());
+		this.track(driver, position);
+	}
+
+	@ResponseStatus(value = HttpStatus.OK)
+	@PostMapping
+	@RequestMapping(value="/positions", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public void trackPositions(@RequestBody Position[] positions) throws Exception {
+		User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		Driver driver = this.service.getDriver(currentUser.getId());
+		for (Position p : positions) {
+			this.track(driver, p);
+		}
+	}
+
+	private void track(Driver driver, Position position) {
 		driver = this.service.setLastPosition(driver, position);
 		this.emit(driver, driver.getLastPosition());
+
 	}
 
 	private void emit(Driver driver, Position p) {
