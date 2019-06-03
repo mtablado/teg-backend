@@ -44,7 +44,8 @@ public class UserController {
 	@ResponseStatus(value = HttpStatus.OK)
 	@RequestMapping(value="/users/current-user", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody User getCurrentUser() throws Exception {
-		return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		User principal = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		return this.service.getUser(principal.getId());
 	}
 
 }
