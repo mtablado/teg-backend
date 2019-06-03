@@ -43,7 +43,7 @@ public class TrafficServiceImpl implements TrafficService {
 		// TODO check if this concatenation needs to be delegated to UI.
 
 		// Get the last stored positions
-		Flux<DriverPosition> initial = this.driverRepository.findAllByType(UserType.DRIVER)
+		Flux<DriverPosition> initial = this.driverRepository.findAllByTypeAndLastPositionNotNullAndEnabled(UserType.DRIVER, true)
 			.map(d -> {
 				log.debug("Traffic from initial flux:" + d);
 				return new DriverPosition(d);
