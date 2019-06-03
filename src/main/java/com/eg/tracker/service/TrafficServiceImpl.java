@@ -87,6 +87,7 @@ public class TrafficServiceImpl implements TrafficService {
 		});
 	}
 
+	@Override
 	public DriverStatusType getDriverStatusFromDate(Date date) {
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime movementBoundary = now.minusMinutes(10);
@@ -97,13 +98,13 @@ public class TrafficServiceImpl implements TrafficService {
 				.toLocalDateTime();
 
 		if (lastMove.isAfter(movementBoundary)) {
-			// last 15 minutes, moving.
+			// last 10 minutes, moving.
 			return DriverStatusType.MOVING;
 		} else if (lastMove.isBefore(offBoundary)) {
 			// no news since 4 ours, off
 			return DriverStatusType.OFF;
 		} else {
-			// between off and 15 minutes, stationary
+			// between off and 10 minutes, stationary
 			return DriverStatusType.STATIONARY;
 		}
 
