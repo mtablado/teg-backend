@@ -13,9 +13,21 @@ public interface DriverService {
 
 	Driver getDriver(String id);
 
+	/**
+	 * List active drivers
+	 * @return List active drivers
+	 */
 	List<Driver> findDrivers();
 
+	/**
+	 * List all drivers including disabled ones.
+	 * @return All drivers including disabled ones.
+	 */
+	List<Driver> findAllDrivers();
+
 	Flux<Driver> findRxDrivers();
+
+	Flux<Driver> findAllRxDrivers();
 
 	@PreAuthorize("hasRole('ADMIN')")
 	Driver addDriver(Driver driver);

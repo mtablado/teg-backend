@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,7 +28,11 @@ public class DriversController {
 	@ResponseStatus(value = HttpStatus.OK)
 	@GetMapping
 	@RequestMapping(value="/drivers", produces = MediaType.APPLICATION_JSON_VALUE)
-	public @ResponseBody List<Driver> getDrivers() throws Exception {
+	public @ResponseBody List<Driver> getDrivers(
+			@RequestParam(value = "all", required = false) boolean all) throws Exception {
+		if (all) {
+			return this.service.findAllDrivers();
+		}
 		return this.service.findDrivers();
 	}
 

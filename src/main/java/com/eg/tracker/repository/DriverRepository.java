@@ -12,5 +12,6 @@ public interface DriverRepository extends MongoRepository<Driver, String> {
     public Driver findByName(String name);
     public List<Driver> findByLastname(String lastname);
     public List<Driver> findByType(UserType type);
+    public List<Driver> findAllByTypeAndLastPositionNotNullAndEnabled(UserType type, boolean enabled);
 
 }

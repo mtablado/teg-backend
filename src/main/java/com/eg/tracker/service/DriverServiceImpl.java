@@ -33,11 +33,21 @@ public class DriverServiceImpl implements DriverService {
 
 	@Override
 	public List<Driver> findDrivers() {
+		return this.repository.findAllByTypeAndLastPositionNotNullAndEnabled(UserType.DRIVER, true);
+	}
+
+	@Override
+	public List<Driver> findAllDrivers() {
 		return this.repository.findByType(UserType.DRIVER);
 	}
 
 	@Override
 	public Flux<Driver> findRxDrivers() {
+		return this.reactiveRepository.findAllByTypeAndLastPositionNotNullAndEnabled(UserType.DRIVER, true);
+	}
+
+	@Override
+	public Flux<Driver> findAllRxDrivers() {
 		return this.reactiveRepository.findAllByType(UserType.DRIVER);
 	}
 
@@ -64,4 +74,5 @@ public class DriverServiceImpl implements DriverService {
 		driver.setLastPosition(position);
 		return this.repository.save(driver);
 	}
+
 }
